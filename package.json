@@ -1,0 +1,16 @@
+{
+  "name": "an-ai-agent-is-just-an-llm-in-a-loop-nope-watch-demo",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "An Ai Agent Is Just An Llm In A Loop Nope Watch Lab — companion interactive demo",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node app/server.js",
+    "lab": "node scripts/run-lab.mjs",
+    "test": "node --test \"test/*.test.mjs\"",
+    "check": "npm test"
+  }
+}

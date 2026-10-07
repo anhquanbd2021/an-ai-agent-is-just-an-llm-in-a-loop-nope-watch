@@ -1,0 +1,58 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Guide to the Runway Replay lab — what each control proves and which detail to watch while the request replays.">
+<title>Runway Replay Guide</title>
+<link rel="stylesheet" href="/styles.css">
+<!-- pb-shell --><link rel="stylesheet" href="./pb-shell.css"><!-- pb-shell --><!-- pb-back --><link rel="stylesheet" href="./pb-back.css"><!-- pb-back --></head>
+<body>
+<a class="skip-link" href="#guide">Skip to the guide</a>
+<main>
+<nav aria-label="Primary"><a href="/">Lab</a><a aria-current="page" href="/guide.html">Guide</a><a href="https://github.com/anhquanbd2021/an-ai-agent-is-just-an-llm-in-a-loop-nope-watch">Source</a></nav>
+<header class="guide-intro">
+  <p class="eyebrow">Step-by-step guide</p>
+  <h1>Five things the replay proves</h1>
+  <p class="lede">Each card below maps one lab feature to the exact claim it supports — and to the detail worth watching while the request moves.</p>
+  <p class="warning"><strong>Honest limits.</strong> The planner is a stub on purpose. The lab models the control loop, not model quality — the question is who decides what happens next.</p>
+</header>
+
+<section class="panel" id="guide" aria-labelledby="start-title">
+  <p class="eyebrow">Start here</p>
+  <h2 id="start-title">What this demo proves</h2>
+  <p>Switch the policy to <em>fixed</em> and run the replay: Search returns <code>[]</code>, the evidence gate is skipped, <code>POST /book</code> is still called, and the fixture answers <code>422 NO_ITINERARY</code> — yet the final message claims <em>Flight booked</em>. Switch back to <em>agent</em>: the same empty result sets <code>needs_replan</code>, the query changes to <code>flexible:true</code>, the gate passes, and the run books exactly once. With <em>every search returns []</em>, the agent blocks with <code>SEARCH_EMPTY</code> and never calls the booking tool.</p>
+  <p><a class="try" href="/">Open the lab</a></p>
+</section>
+
+<section class="guide-section">
+  <p class="eyebrow">The controls</p>
+  <h2>Features and what they prove</h2>
+  <div class="control-grid">
+    <article class="panel control"><span class="control-number">01</span><h3>Policy toggle</h3><p>Replays the same request and fixtures through the one-pass script and the agent control loop side by side.</p><dl><dt>Proves</dt><dd>the difference is the control plane, not the model.</dd></dl><dl><dt>Key detail</dt><dd><code>fixed</code> logs <em>gate skipped</em> before <code>POST /book</code>.</dd></dl></article>
+    <article class="panel control"><span class="control-number">02</span><h3>Flight-strip fan-out</h3><p>Search, Calendar, and Weather light up as one parallel wave, then merge into a single evidence snapshot.</p><dl><dt>Proves</dt><dd>independent evidence tools run concurrently and merge once.</dd></dl><dl><dt>Key detail</dt><dd>the gate waits for all three — booking never fires mid-wave.</dd></dl></article>
+    <article class="panel control"><span class="control-number">03</span><h3>Empty-evidence stamp</h3><p>The search rail turns coral when the observation is <code>[]</code>; the amber re-plan strip loops back with a changed query.</p><dl><dt>Proves</dt><dd>empty evidence is a state that triggers a new request, not a blind retry.</dd></dl><dl><dt>Key detail</dt><dd>attempt 2 is <code>flexible:true</code>, not the same query again.</dd></dl></article>
+    <article class="panel control"><span class="control-number">04</span><h3>Evidence gate</h3><p>The mint booking strip crosses only when <code>itinerary</code>, <code>calendarReady</code>, and <code>weatherLoaded</code> are all true.</p><dl><dt>Proves</dt><dd>side effects are gated on explicit evidence, not on the final answer.</dd></dl><dl><dt>Key detail</dt><dd>the gate is evaluated after the merge, before <code>POST /book</code>.</dd></dl></article>
+    <article class="panel control"><span class="control-number">05</span><h3>Trace + retry budget</h3><p>The trace records plan, fan-out, merge, decide, re-plan, booking, and the answer, with <code>MAX_RETRIES = 2</code> enforced.</p><dl><dt>Proves</dt><dd>every transition is inspectable and the loop is bounded.</dd></dl><dl><dt>Key detail</dt><dd>with both searches empty the run ends <code>blocked</code> and the booking tool is never called.</dd></dl></article>
+  </div>
+</section>
+
+<section class="guide-section">
+  <p class="eyebrow">The map</p>
+  <h2>Where each layer lives</h2>
+  <table class="map">
+    <thead><tr><th>Layer</th><th>Owns</th><th>File</th></tr></thead>
+    <tbody>
+      <tr><td>Plan &amp; merge</td><td>Planner stub, tool order, evidence merge.</td><td><code>public/lab.mjs</code></td></tr>
+      <tr><td>Control</td><td>Gate, re-plan, retry budget, final answer.</td><td><code>public/lab.mjs</code></td></tr>
+      <tr><td>UI</td><td>Rails, gate, trace, verdict badge.</td><td><code>public/app.js</code></td></tr>
+      <tr><td>Server</td><td>Static host, <code>/health</code>, <code>/version</code>, <code>POST /api/run</code>.</td><td><code>app/server.js</code></td></tr>
+      <tr><td>Checks</td><td>Unit ticks, server routes, e2e replay of both policies.</td><td><code>test/</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<p class="closing-links"><a href="/">Back to the lab</a><span class="sep" aria-hidden="true">&middot;</span><a href="https://github.com/anhquanbd2021/an-ai-agent-is-just-an-llm-in-a-loop-nope-watch">Inspect source and tests</a></p>
+</main>
+<!-- pb-shell --><a class="pb-shell" href="https://github.com/anhquanbd2021/an-ai-agent-is-just-an-llm-in-a-loop-nope-watch" title="an-ai-agent-is-just-an-llm-in-a-loop-nope-watch — an Article Playbook demo (view source)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="2" fill="#32C5D2"/><rect x="13" y="2" width="9" height="9" rx="2" fill="#32C5D2" opacity=".45"/><rect x="2" y="13" width="9" height="9" rx="2" fill="#32C5D2" opacity=".45"/><rect x="13" y="13" width="9" height="9" rx="4.5" fill="#32C5D2"/></svg><b>an-ai-agent-is-just-an-llm-in-a-loop-nope-watch</b><i>DEMO</i></a><!-- pb-shell --><!-- pb-back --><a class="pb-back" id="pb-back" href="https://github.com/anhquanbd2021/an-ai-agent-is-just-an-llm-in-a-loop-nope-watch" title="Back to the article — an-ai-agent-is-just-an-llm-in-a-loop-nope-watch">← Article <i>PLAYBOOK</i></a><script>(function(){var a=document.getElementById('pb-back');if(!a)return;var h=location.hostname;if(/^(localhost|127\.0\.0\.1|192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(h)){a.href='//'+h+':'+(/^(localhost|127\.0\.0\.1)$/.test(h)?'1234':'30082')+'/microsites/article.html?slug=an-ai-agent-is-just-an-llm-in-a-loop-nope-watch';}})();</script><!-- pb-back --></body>
+</html>

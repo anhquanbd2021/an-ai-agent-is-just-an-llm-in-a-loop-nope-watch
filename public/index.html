@@ -1,0 +1,73 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Runway Replay — replay one request through a deterministic agent control loop and watch the fixed policy book a flight that does not exist.">
+  <title>Runway Replay — agent control loop lab</title>
+  <link rel="stylesheet" href="/styles.css">
+<!-- pb-shell --><link rel="stylesheet" href="./pb-shell.css"><!-- pb-shell --><!-- pb-back --><link rel="stylesheet" href="./pb-back.css"><!-- pb-back --></head>
+<body>
+<a class="skip-link" href="#lab">Skip to the lab</a>
+<main>
+  <nav aria-label="Primary"><a aria-current="page" href="/">Lab</a><a href="/guide.html">Guide</a><a href="https://github.com/anhquanbd2021/an-ai-agent-is-just-an-llm-in-a-loop-nope-watch">Source</a></nav>
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Runway Replay &middot; one request, one replayable control loop</p>
+      <h1>An agent is a state machine<br>around the model.</h1>
+      <p class="lede">Replay <code>book me a flight</code> as two policies on the same fixtures. The <strong>fixed</strong> policy posts <code>POST /book</code> after an empty search and claims success anyway; the <strong>agent</strong> policy treats the empty result as state, re-plans, passes the evidence gate, and books exactly once.</p>
+    </div>
+    <p class="warning"><strong>Safe educational model.</strong> The LLM is a fixed planner stub and every tool is a deterministic fixture. No network calls, no real bookings, no live model calls.</p>
+  </header>
+
+  <section class="panel controls" aria-labelledby="controls-title">
+    <div class="section-heading">
+      <div><p class="eyebrow">Run configuration</p><h2 id="controls-title">Pick the policy, replay the request</h2></div>
+      <span id="verdict" class="badge" role="status" aria-live="polite">idle</span>
+    </div>
+    <div class="control-grid">
+      <fieldset>
+        <legend>Policy</legend>
+        <label><input type="radio" name="policy" value="agent" checked> <span>agent &mdash; evidence gate + bounded re-plan</span></label>
+        <label><input type="radio" name="policy" value="fixed"> <span>fixed &mdash; one-pass script, gate skipped</span></label>
+      </fieldset>
+      <fieldset>
+        <legend>Search fixture</legend>
+        <label><input type="radio" name="scenario" value="empty_then_hit" checked> <span>empty first search, flexible retry hits</span></label>
+        <label><input type="radio" name="scenario" value="always_empty"> <span>every search returns <code>[]</code></span></label>
+        <label><input type="radio" name="scenario" value="instant_hit"> <span>first search already returns an itinerary</span></label>
+      </fieldset>
+    </div>
+    <div class="button-row" role="group" aria-label="Replay controls">
+      <button id="step" type="button">Step</button>
+      <button id="run" type="button">Run replay</button>
+      <button id="reset" type="button" class="secondary">Reset</button>
+    </div>
+    <p class="muted">Every run is deterministic: same policy and fixture, same trace, byte for byte. <code>MAX_RETRIES = 2</code>.</p>
+  </section>
+
+  <section class="workspace" id="lab" aria-label="Runway Replay board">
+    <section class="panel" aria-labelledby="rails-title">
+      <div class="section-heading"><div><p class="eyebrow">Flight-strip rails</p><h2 id="rails-title">Fan-out, gate, booking</h2></div></div>
+      <div class="rails" id="rails">
+        <div class="rail" data-tool="search" id="rail-search"><span class="rail-name">search</span><span class="rail-detail" id="rail-search-detail">idle</span></div>
+        <div class="rail" data-tool="calendar" id="rail-calendar"><span class="rail-name">calendar</span><span class="rail-detail" id="rail-calendar-detail">idle</span></div>
+        <div class="rail" data-tool="weather" id="rail-weather"><span class="rail-name">weather</span><span class="rail-detail" id="rail-weather-detail">idle</span></div>
+        <div class="gate" id="gate"><span class="gate-name">evidence gate</span><span class="gate-detail" id="gate-detail">itinerary + calendarReady + weatherLoaded</span></div>
+        <div class="replan" id="replan" hidden><span class="replan-name">re-plan</span><span class="replan-detail" id="replan-detail">flexible=true</span></div>
+        <div class="booking" id="booking"><span class="booking-name">POST /book</span><span class="booking-detail" id="booking-detail">not called</span></div>
+      </div>
+      <p class="muted">Coral = empty evidence. Amber = re-plan. Mint = confirmed. Dim = not reached yet.</p>
+    </section>
+    <section class="panel" aria-labelledby="trace-title">
+      <div class="section-heading"><div><p class="eyebrow">Control trace</p><h2 id="trace-title">Every state transition</h2></div></div>
+      <ol class="trace" id="trace" aria-label="Trace events"><li class="trace-empty" id="trace-empty">No ticks yet &mdash; press Step or Run replay.</li></ol>
+      <p class="answer" id="answer" hidden></p>
+    </section>
+  </section>
+
+  <p class="closing-links"><a href="/guide.html">Read the step-by-step guide</a><span class="sep" aria-hidden="true">&middot;</span><a href="https://github.com/anhquanbd2021/an-ai-agent-is-just-an-llm-in-a-loop-nope-watch">Inspect source and tests</a></p>
+</main>
+<script type="module" src="/app.js"></script>
+<!-- pb-shell --><a class="pb-shell" href="https://github.com/anhquanbd2021/an-ai-agent-is-just-an-llm-in-a-loop-nope-watch" title="an-ai-agent-is-just-an-llm-in-a-loop-nope-watch — an Article Playbook demo (view source)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="2" fill="#32C5D2"/><rect x="13" y="2" width="9" height="9" rx="2" fill="#32C5D2" opacity=".45"/><rect x="2" y="13" width="9" height="9" rx="2" fill="#32C5D2" opacity=".45"/><rect x="13" y="13" width="9" height="9" rx="4.5" fill="#32C5D2"/></svg><b>an-ai-agent-is-just-an-llm-in-a-loop-nope-watch</b><i>DEMO</i></a><!-- pb-shell --><!-- pb-back --><a class="pb-back" id="pb-back" href="https://github.com/anhquanbd2021/an-ai-agent-is-just-an-llm-in-a-loop-nope-watch" title="Back to the article — an-ai-agent-is-just-an-llm-in-a-loop-nope-watch">← Article <i>PLAYBOOK</i></a><script>(function(){var a=document.getElementById('pb-back');if(!a)return;var h=location.hostname;if(/^(localhost|127\.0\.0\.1|192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(h)){a.href='//'+h+':'+(/^(localhost|127\.0\.0\.1)$/.test(h)?'1234':'30082')+'/microsites/article.html?slug=an-ai-agent-is-just-an-llm-in-a-loop-nope-watch';}})();</script><!-- pb-back --></body>
+</html>
